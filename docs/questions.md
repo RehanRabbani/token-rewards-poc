@@ -33,7 +33,7 @@ These five can change the architecture or the 6-week date. Everything else can b
 | P6 | Do users ever buy the token with money? | Selling a token for money can make it e-money or a security | No. Tokens are only earned |
 | P7 | Can users transfer, sell or cash out tokens? | Transferable tokens with value trigger the heaviest rules | No. Closed loop in v1 |
 | P8 | What earns rewards: purchases only, or also referrals, streaks, actions? | Each trigger is an integration point and an abuse vector | Purchases only in v1 |
-| P9 | Reward rate, expiry, and what happens on refunds? | Refunds after a reward was spent is a real edge case | Fixed %, 12-month expiry, refund claws the reward back |
+| P9 | Reward rate, expiry, and what happens on refunds? | Refunds after a reward was spent is a real edge case | Fixed %, 12-month expiry. On refund: claw back what the user still holds and record any shortfall as a debt netted against future rewards (`feasibility.md` section 6) |
 | P10 | Must users see the token as crypto (wallet address, on-chain explorer)? | Visible wallets add onboarding friction and support load | No. Users see a balance; wallet is created silently |
 
 ### Users and markets
@@ -61,6 +61,7 @@ These five can change the architecture or the 6-week date. Everything else can b
 |---|---|---|---|
 | P20 | Who signs off on scope, legal and launch? | Avoids late surprises | One product owner plus their legal counsel |
 | P21 | Has your legal team reviewed a token programme? | Legal sign-off is on the critical path | Not yet; must happen by week 2 |
+| P22 | What do users redeem tokens for: physical goods and services, or digital goods and features unlocked inside the app? | iOS in-app-purchase rules may apply to digital goods | Physical goods and services consumed outside the app |
 
 ---
 
@@ -95,6 +96,8 @@ Each assumption names the risk if it is wrong, so it can be checked first.
 | A8 | **Partner sends payment and refund webhooks** with a unique event ID | Without unique IDs, preventing duplicate rewards is much harder |
 | A9 | **Partner legal sign-off by end of week 2** | The launch date moves |
 | A10 | **About 100k MAU, up to 20k reward events per day** | Higher volume changes batching and cost, not the design |
+| A11 | **Tokens are redeemed on physical goods or services**, not digital goods unlocked inside the iOS app | App Store in-app-purchase rules may apply; needs an App Store check, with web-first as the fallback |
+| A12 | **Refund after a reward was spent:** the refund is never blocked; we claw back what the user still holds and record the shortfall as debt netted against future rewards | If the partner prefers to absorb the loss, the proof changes in one place (decision D11 in `plan.md`) |
 
 ## D. What would change the plan most
 

@@ -50,9 +50,12 @@ In 5 days, as technical lead working with BD:
 | D5 | **Chain-neutral EVM layer-2** design | No information about our company's own stack (assumption B4) |
 | D6 | **We define the two unexplained files** and say so in the README | The brief gives no definition; recruiter confirmed on 13 Nov: "you can define them based on your own understanding" |
 | D7 | **Front-load risk:** proof starts on Day 1, documents and buffer on Day 4 | Speed is 20%; no hard engineering left for the last two days |
-| D8 | **Proof stack:** Node 22+ and TypeScript, Hardhat 3 + viem, OpenZeppelin v5, Express, SQLite, zod, Vitest, React + Vite + Tailwind, npm workspaces | Mostly my existing skills; runs anywhere with no setup; same design as the production stack |
+| D8 | **Proof stack:** Node 22+ and TypeScript, Hardhat 3 + viem, OpenZeppelin v5, Express, SQLite via Node's built-in `node:sqlite` (nothing to compile), zod, Node's built-in test runner with `tsx`, React + Vite + Tailwind, npm workspaces | Mostly my existing skills; runs anywhere with no setup; same design as the production stack |
 | D9 | **Two layers of idempotency:** unique keys in our ledger *and* a used-reference check in the contract | If the service crashes after sending a transaction, a retry can never mint or burn twice |
 | D10 | **Service uses `zod` ≥ 4.6.6 directly**; the Hardhat dev-tool advisory on older `zod` is accepted, not force-fixed | The advisory (memory exhaustion on oversized inputs) matters where `zod` validates real API requests; in Hardhat it only reads local config. Force-fixing would downgrade to Hardhat 2 |
+| D11 | **Refund after the reward was spent:** never block the refund; burn what the user still holds; record the shortfall as debt netted against the next reward | Keeps customers unblocked, keeps the chain balance non-negative, bounds the partner's loss. Options compared in `feasibility.md` section 6; partner confirms via question P9 |
+| D12 | **Ledger first, chain second.** The API writes the ledger and answers; a settler sends entries to the chain oldest-first, one at a time per user, and asks the contract "have you seen this reference?" before every send. A database trigger also blocks any overspend | The app never waits on block times or a chain outage; a crash after sending cannot cause a double mint; two independent guards against overspending |
+| D13 | **`inSync` means "no unexplained difference"**: the chain equals the *confirmed* part of the ledger. Entries still waiting are shown as `unsettledEntries` | A normal wait must not look like drift, or reconciliation alerts become noise. Found when my own first test assumed the opposite |
 
 **Production stack (proposed, not built):** EVM layer-2 (Base by default), embedded wallets (Privy / Coinbase Developer Platform / thirdweb, to be compared in `feasibility.md`), managed signing keys (AWS KMS or a custody provider), Postgres, a queue (SQS or BullMQ) for the chain worker, managed RPC with a fallback, signed webhooks plus a small partner SDK, drift alerts from reconciliation.
 
@@ -69,7 +72,7 @@ In 5 days, as technical lead working with BD:
 | Part | Contents |
 |---|---|
 | `contracts/` | `RewardToken.sol` ✅: ERC-20 on OpenZeppelin, whole-number tokens; only our service (issuer role) can reward and redeem; user-to-user transfers blocked (closed loop); each operation's ledger reference can be used only once |
-| `service/` | Node/TypeScript API with a ledger database (SQLite) and a chain worker |
+| `service/` | Node/TypeScript API with a ledger database (SQLite) and a chain settler ✅ earn, spend, balance, settler (Day 2) |
 | `demo/` | One simple page: make a purchase, earn, redeem, see ledger and on-chain balance side by side |
 | `tests/` | Scripted failure tests that print a readable pass/fail report |
 
@@ -85,10 +88,10 @@ In 5 days, as technical lead working with BD:
 
 | # | Case | Expected result |
 |---|---|---|
-| F1 | Same earn request sent twice (webhook retry) | Rewarded once (idempotency key) |
-| F2 | Two spends at once exceeding the balance | One succeeds, one is rejected; no negative balance |
+| F1 | Same earn request sent twice (webhook retry) | Rewarded once (idempotency key) ✅ tested Day 2 |
+| F2 | Two spends at once exceeding the balance | One succeeds, one is rejected; no negative balance ✅ tested Day 2 (five at once) |
 | F3 | Chain transaction fails or the service crashes mid-flight | Ledger entry stays pending, is retried with the same reference, and settles; the contract rejects a reused reference, so no lost or double tokens |
-| F4 | Refund after the reward was already spent | Clawback creates a recorded debt or blocks the refund reward path, per the rule in `feasibility.md`; never a silent mismatch |
+| F4 | Refund after the reward was already spent | Refund is never blocked; clawback burns what the user still holds and records the shortfall as debt netted against the user's next reward (D11); never a silent mismatch |
 | F5 | Ledger and chain drift apart | Reconciliation detects and reports it |
 
 ### Not in the proof
@@ -100,8 +103,8 @@ Real money, mainnet, KYC, wallet vendors, production key management, app-store w
 | Day | Date | Documents | Proof | Gate (end of day) |
 |---|---|---|---|---|
 | **1** | Fri 13 Nov | `intent.md`, `questions.md`, `plan.md`, AI log started ✅ | Repo set up; token compiled and deployed to the local chain ✅ (6 contract tests passing, verified on my Mac with Node 26) | ✅ Passed |
-| **2** | Sat 14 Nov | `feasibility.md` | Ledger, earn and spend end to end, chain worker | One recommended option; happy path runs |
-| **3** | Sun 15 Nov | — | F1–F5 failure tests, reconciliation | All failure tests pass |
+| **2** | Sat 14 Nov | `feasibility.md` ✅ | Ledger, earn and spend end to end, chain settler ✅ (11 service tests passing against a real local chain) | ✅ One recommended option; ✅ happy path runs |
+| **3** | Sun 15 Nov | — | F3–F5: crash mid-send, refund clawback, reconciliation (F1 and F2 already pass) | All failure tests pass |
 | **4** | Mon 16 Nov | `proposal.md`, `followup.md` | Demo page, README (run in 3 commands) | BD could send the proposal as-is |
 | **5** | Tue 17 Nov | `Final directive.md`, final AI log | Record 5-minute video, package zip | **Submitted by midday** |
 

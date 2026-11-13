@@ -20,3 +20,13 @@
 
 **What worked:** using a second model as a reviewer caught scope creep the first plan missed.
 **What I checked myself:** _(fill in: which questions/assumptions you edited and why)_
+
+## Day 2 — started Fri 13 Nov (late), continues Sat 14 Nov
+
+| Time | Tool | Task | What I asked | Kept | Changed / rejected | Time saved (est.) |
+|---|---|---|---|---|---|---|
+| 23:35 | Claude (Sonnet) | Research for `feasibility.md` | Six parallel web searches: embedded wallet vendors, MiCA and loyalty points, Apple App Store crypto rules, Base fees and paymasters, Starbucks Odyssey, FinCEN closed-loop rules | Non-transferable loyalty points are outside MiCA; transferable ones may not be; FinCEN "user" vs money transmitter; Odyssey closed 31 Mar 2024 | Could not open Apple's own guideline page (blocked), so the Apple points are marked "verify" and rated low-medium confidence | ~3 h |
+| 23:50 | Claude (Sonnet) | Draft `feasibility.md` | Options, risks, dependencies, what fits in 6 weeks, using the research | "Ledger first, chain mirror second" with a week-2 legal gate and ledger-only fallback; refund rule option 2 (debt netted against future rewards) | Self-check caught a source that did not support a claim (Starbucks "simple rewards") and a regulatory figure stated more broadly than the source; both fixed | ~3 h |
+| 00:10 | Claude (Sonnet) | Keep other `.md` files consistent | Update questions, plan, README after the feasibility decisions | New question P22, assumptions A11–A12, decision D11 | – | ~30 min |
+| 00:40 | Claude (Sonnet) | Build `service/`: ledger, chain adapter, settler, API, tests | Design from `plan.md`: ledger first, chain second, idempotency, double-spend guard, crash recovery; test on a real local chain | Whole design; `node:sqlite` and `node:test` instead of extra dependencies; database trigger as an overspend backstop | My first test run had 1 failure of 11: Claude had asserted `inSync` false while an entry was merely waiting. The code was right and the test wrong, so the test was fixed and the meaning documented (D13) rather than bending the code | ~5 h |
+| 01:10 | Claude (Sonnet) | Run the real server end to end | Start the chain, deploy, start the service, curl earn / repeat / spend and watch the background settler | Earn pending → repeat returns the same entry → spend → chain reaches 60 and matches the ledger | – | ~30 min |

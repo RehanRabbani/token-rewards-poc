@@ -3,12 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "description": "Proof of concept: closed-loop reward token where the app ledger and the chain never disagree",
-  "workspaces": ["contracts"],
+  "workspaces": [
+    "contracts",
+    "service"
+  ],
   "scripts": {
     "build": "npm run build -w contracts",
-    "test": "npm test -w contracts",
+    "test": "npm run build -w contracts && npm test -w contracts && npm test -w service",
     "chain": "npm run chain -w contracts",
-    "deploy": "npm run deploy -w contracts"
+    "deploy": "npm run deploy -w contracts",
+    "deploy:local": "npm run deploy:local -w contracts",
+    "service": "npm start -w service"
   },
-  "engines": { "node": ">=22" }
+  "engines": {
+    "node": ">=22.13"
+  }
 }
