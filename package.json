@@ -1,0 +1,14 @@
+{
+  "name": "token-rewards-poc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Proof of concept: closed-loop reward token where the app ledger and the chain never disagree",
+  "workspaces": ["contracts"],
+  "scripts": {
+    "build": "npm run build -w contracts",
+    "test": "npm test -w contracts",
+    "chain": "npm run chain -w contracts",
+    "deploy": "npm run deploy -w contracts"
+  },
+  "engines": { "node": ">=22" }
+}
