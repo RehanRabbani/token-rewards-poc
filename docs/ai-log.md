@@ -10,16 +10,16 @@
 | 16:51 | Claude (Sonnet → Opus) | 5-day plan | Pasted the full objective; asked for a plan, not code | Closed-loop token hypothesis; proof = ledger/chain consistency | – | ~1 h |
 | 16:57 | Claude (Fable) | Independent review of the plan | Asked a second model to critique the first plan | Cut proof scope; front-load risk; add refund clawback; "why blockchain?" question | Rejected paymaster/wallet vendor in the proof as too much for 5 days | ~1 h |
 | 17:01 | Claude (Opus) | Stack decision | Shared that I have no Solidity experience | TypeScript-heavy proof, Hardhat, local chain by default | – | – |
-| 17:07 | Claude (Opus) | Draft `intent.md` and `questions.md` | Draft from the agreed plan | Structure; ranked top-5 blockers; assumption per question | _(fill in after review)_ | ~2 h |
-| 17:13 | Claude (Opus) | `plan.md` | Document the agreed plan, not the original | Decisions, failure cases F1–F5, priorities, change log vs first plan | _(fill in)_ | ~1 h |
+| 17:07 | Claude (Opus) | Draft `intent.md` and `questions.md` | Draft from the agreed plan | Structure; ranked top-5 blockers; assumption per question | Nothing removed. After I asked the recruiter what the two files mean, `intent.md` was updated with the answer (17:16) | ~2 h |
+| 17:13 | Claude (Opus) | `plan.md` | Document the agreed plan, not the original | Decisions, failure cases F1–F5, priorities, change log vs first plan | I told Claude to base the plan on our latest agreement and not on the first plan, so the first plan was replaced. I also asked that all `.md` files are kept up to date | ~1 h |
 | 17:16 | – (human) | Clarified the two undefined files | Asked the recruiter on LinkedIn | Recruiter confirmed: define them myself | – | – |
-| 17:30 | Claude (Opus) | Tech stack | Asked which stack to use | Split proof stack vs production stack | _(fill in)_ | ~30 min |
+| 17:30 | Claude (Opus) | Tech stack | Asked which stack to use | Split proof stack vs production stack | No change. I went ahead with the proposed stack and ran it on my own Mac (17:49) | ~30 min |
 | 17:35 | Claude (Opus) | Repo + contract + tests + deploy | Build the Day 1 proof step | `RewardToken.sol` on OpenZeppelin; 6 tests; deploy script; on-chain duplicate-reference check | Claude found the sandbox could not download the compiler and worked around it only in the sandbox, keeping the repo clean | ~3 h |
 | 17:46 | Claude (Opus) | Triage `npm audit` warnings | Pasted my `npm install` output | All 12 are one `zod` advisory via Hardhat; don't force-fix (would downgrade to Hardhat 2); service must use patched `zod` directly | – | ~20 min |
 | 17:49 | – (human) | Verified on my own machine | Ran `npm install`, `npm test` and `npm run deploy` on my Mac (Node 26) | 6/6 tests pass; deploy rewards 100 and redeems 40 (balance 60); compiler downloaded normally; the `esbuild` approval was not needed | – | – |
 
 **What worked:** using a second model as a reviewer caught scope creep the first plan missed.
-**What I checked myself:** _(fill in: which questions/assumptions you edited and why)_
+**What I checked myself:** I asked the recruiter what the two undefined files mean. I ran `npm install`, `npm test` and `npm run deploy` on my own Mac and pasted the results. I also asked what "deploy" does and if it is safe for my machine, before running it.
 
 ## Day 2 — started Fri 13 Nov (late), continues Sat 14 Nov
 
@@ -30,3 +30,7 @@
 | 00:10 | Claude (Sonnet) | Keep other `.md` files consistent | Update questions, plan, README after the feasibility decisions | New question P22, assumptions A11–A12, decision D11 | – | ~30 min |
 | 00:40 | Claude (Sonnet) | Build `service/`: ledger, chain adapter, settler, API, tests | Design from `plan.md`: ledger first, chain second, idempotency, double-spend guard, crash recovery; test on a real local chain | Whole design; `node:sqlite` and `node:test` instead of extra dependencies; database trigger as an overspend backstop | My first test run had 1 failure of 11: Claude had asserted `inSync` false while an entry was merely waiting. The code was right and the test wrong, so the test was fixed and the meaning documented (D13) rather than bending the code | ~5 h |
 | 01:10 | Claude (Sonnet) | Run the real server end to end | Start the chain, deploy, start the service, curl earn / repeat / spend and watch the background settler | Earn pending → repeat returns the same entry → spend → chain reaches 60 and matches the ledger | – | ~30 min |
+| 14:00 | Claude (Sonnet) | Quiz on `feasibility.md` sections 1, 4 and 6 | Asked Claude to quiz me like an interviewer, one question at a time | The corrected answers | My first answers were wrong in three places. I said we promise a fully live app and could go live in week 2 with some bugs. I said that if the lawyers say no, we stop work. I said a blockchain means no single administrator. Claude showed me why each was wrong. For the refund question I chose the option that records the missing points as a debt | Not about time: I needed to understand my own document |
+| 15:35 | Claude (Sonnet) | Write sections 1, 4 and 6 in simple English | Gave Claude my answers and asked for easy English that an 18-year-old can understand | Claude wrote the text from my corrected answers, in short simple sentences | The idea of the partner holding the admin key is not in the document. I have not decided on it yet | ~20 min |
+
+**What I checked myself (Day 2):** I tested my own understanding of sections 1, 4 and 6 in the quiz and found three mistakes in my first answers.

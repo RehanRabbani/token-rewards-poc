@@ -6,9 +6,9 @@
 
 ## 1. Recommendation in one paragraph
 
-**Build the ledger first, mirror it on-chain second, and decide at the end of week 2.** The core of the product is a reward *ledger* (who earned what, who spent what), and that is the same whether the "token" is a database row or an on-chain ERC-20. So we build the ledger and a closed-loop token on an EVM layer-2 in parallel. At the **week-2 legal gate**, if counsel confirms the closed-loop design, we keep the on-chain mirror and launch a **capped pilot** (5–10% of users) in week 6. If not, we switch the mirror off and still launch the same pilot on the ledger alone, on the same date. The date is protected either way, and the partner gets the token story if it is allowed.
+We launch a small pilot with one main flow: a user buys something, earns reward points, and uses the points as a discount on the next order. Only 5 to 10 percent of the users get it at the start. In week 1 we agree the scope and ask the partner's lawyers to look at the token idea. In week 2 we build the ledger (the list of who earned and spent what) and the token on a test blockchain, while the lawyers do their review. They give us their answer at the end of week 2. If it is yes, the points also live on the blockchain as a token. If it is no, we switch the blockchain part off and launch the same pilot with plain points, on the same date. The date does not move either way, because the ledger is the main part of the product and we build it in both cases.
 
-**What is not feasible in 6 weeks, and we say so up front:** a token users can transfer, sell or cash out; accepting crypto or stablecoins as payment; a full general launch with an external security audit.
+Some things we cannot do in 6 weeks, and we say so now: a token that users can send to each other, sell or cash out; paying with crypto or stablecoins; and a launch to all users with a full outside security check (an audit).
 
 ## 2. What the partner asked, and what each part really means
 
@@ -36,20 +36,22 @@ My judgment, to validate on the first partner call. **B is built on top of A**: 
 
 ## 4. Why use a blockchain at all?
 
-BD will be asked this first, so here is the honest answer.
+The partner's CTO will ask this first, so here is the honest answer.
 
-**For a closed-loop token in v1, the blockchain adds very little for the end user.** The user sees a balance either way. A database can do everything the pilot needs. The reasons to go on-chain are about what comes *after* v1:
+For the first version, the blockchain does not add much for the user. The user sees a points balance either way, and a normal database can do the whole job. It also does not mean "no single boss" here. In our design only our service can create or remove tokens, so we are the one administrator.
 
-1. **A path to later features** (transferability, partner-to-partner use, public verifiability) without re-issuing everyone's balance. This is only worth paying for if the partner genuinely wants it later.
-2. **An independent audit trail** the partner can check without trusting our database.
-3. **A reusable platform** for our next partner, which is the commercial reason for us.
-4. **The partner asked for a token.**
+There are still some reasons to use it. They are about what comes after version 1:
 
-**The costs:** key management for the minting key, a chain worker, reconciliation, a security review of the contract, and more to explain to users and regulators.
+1. The partner gets a record they can check by themselves, without trusting our database.
+2. It keeps the door open for later features, like letting users send tokens to each other, without giving everyone new balances.
+3. It gives us a base we can reuse for the next partner. This reason is more for us than for the partner.
+4. The partner asked for a token.
 
-**What the market says.** Starbucks closed its NFT-based loyalty beta, Odyssey, on 31 March 2024 [8][9]. Commentary at the time pointed to the lack of a clear need for the blockchain part, and to ordinary members wanting simple rewards [9]. The lesson for us is not "avoid blockchain" but **"don't make the user care about it, and be able to say what it is for."**
+It also costs us something. We must keep the signing key safe, run a worker that sends entries to the chain, check that the app and the chain agree, get the contract reviewed, and explain it to users and lawyers.
 
-**Decision rule:** if the partner answers question P2 ("why a token rather than points?") with "no particular reason", we recommend **Option A** and keep the on-chain layer as a switchable add-on.
+What happened to others: Starbucks closed its NFT loyalty test, called Odyssey, on 31 March 2024 [8]. One commentator asked if the blockchain part was needed at all [9], and another said that good loyalty programs are simple [15]. The lesson is not "never use a blockchain". It is "do not make the user care about it, and know what it is for."
+
+Our rule: if the partner cannot say why they want a token, we recommend plain points.
 
 ## 5. Regulation: what we know and what must be confirmed
 
@@ -66,24 +68,28 @@ BD will be asked this first, so here is the honest answer.
 
 ## 6. Token economics (the questions BD gets asked first)
 
-| Question | Proposed default (confirm with the partner) |
+These are our starting answers. The partner must confirm them.
+
+| Question | Our default |
 |---|---|
-| Who pays for rewards? | The partner, at a fixed % of purchase value (for example 2%), with a **monthly budget cap** |
-| What is the value of a token? | Fixed: 1 token = 1 point = a fixed amount of discount. No market price |
-| Expiry | 12 months after earning, with a warning before expiry |
-| What stops reward farming? | Rewards only on **settled** payments (webhook, not button click); per-user daily earn cap; global daily cap; no reward on self-referrals; alert on unusual patterns |
-| **Refund after the reward was spent** | **Decision below** |
-| Kill switch | One setting stops all earning and redeeming; the ledger keeps working, so nothing is lost |
+| Who pays for the rewards? | The partner. A fixed share of each purchase, for example 2 percent, with a monthly budget limit |
+| What is a token worth? | A fixed amount. 1 token = 1 point = a fixed amount of discount (1 cent in our test). It has no market price |
+| When do points expire? | 12 months after the user earns them. We warn the user before that |
+| How do we stop cheating? | Points are given only after a payment is confirmed, not when a button is clicked. Each user has a daily limit, and there is a daily limit for everyone. No points for inviting yourself. We watch for strange patterns |
+| What if a purchase is refunded after the points were spent? | See the decision below |
+| How do we stop everything fast? | One switch stops earning and spending. The ledger keeps working, so nothing is lost |
 
-### Decision: refund after the reward was spent
+### Decision: a refund after the points were spent
 
-| Option | Result | Verdict |
+Here is an example. A user earns 100 points on a $50 purchase. The 100 points are worth $1. The user spends all 100 points on another order. Then the user returns the $50 purchase. We want the 100 points back, because the purchase was cancelled, but the user has no points left.
+
+| Option | What happens | Our view |
 |---|---|---|
-| 1. Block the refund | Customer cannot get their money back | Rejected: bad experience and likely a consumer-law problem |
-| 2. Allow the refund; claw back what the user still holds; **record the shortfall as a debt netted against future rewards** | Customer is never blocked; the chain never goes negative; the partner's loss is bounded | **Recommended** |
-| 3. Allow the refund and absorb the loss | Simple, but invites abuse (earn, spend, refund, repeat) | Fallback if the partner prefers it |
+| 1. Block the refund | The customer cannot get their money back | Rejected. It is unfair, and in some countries it may be against the law |
+| 2. Give the refund and take back the points the user still has. If some points are missing, write them down as a debt and take them from the user's next rewards | The customer is never blocked. The balance on the blockchain never goes below zero. The partner loses at most the value of the points that were spent (here $1) | **Our choice** |
+| 3. Give the refund and let the partner take the loss | It is simple, but people could cheat: earn, spend, return, and repeat | Backup, if the partner prefers it |
 
-The proof will implement option 2 (failure case F4). It becomes a line in `questions.md` for the partner to confirm (P9).
+The customer does not pay any extra cash. The missing points are only taken from their next rewards. The proof tests this in failure case F4, and the partner confirms it in question P9.
 
 ## 7. Cost sketch
 
