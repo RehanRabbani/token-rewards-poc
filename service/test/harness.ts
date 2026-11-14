@@ -3,10 +3,10 @@ import { existsSync, readFileSync } from "node:fs";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
-import { createPublicClient, createWalletClient, defineChain, http, type Address } from "viem";
+import { createPublicClient, createWalletClient, defineChain, http, type Address, type Hex } from "viem";
 import { mnemonicToAccount } from "viem/accounts";
 import { createApp } from "../src/app.ts";
-import { ViemChain } from "../src/chain.ts";
+import { ViemChain, type Chain, type ChainOp } from "../src/chain.ts";
 import { devIssuerKey } from "../src/config.ts";
 import { openDb } from "../src/db.ts";
 import { Ledger } from "../src/ledger.ts";
@@ -131,3 +131,81 @@ export async function call(baseUrl: string, method: string, path: string, body?:
 
 let counter = 0;
 export const uid = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${++counter}`;
+
+/** The HTTP calls most tests need, bound to one running stack. */
+export function api(s: Stack) {
+  return {
+    earn: (userId: string, over: Record<string, unknown> = {}) =>
+      call(s.baseUrl, "POST", "/earn", { eventId: uid("evt"), userId, orderId: uid("order"), purchaseCents: 5000, ...over }),
+    spend: (userId: string, points: number, over: Record<string, unknown> = {}) =>
+      call(s.baseUrl, "POST", "/spend", { eventId: uid("spend"), userId, orderId: uid("order"), points, ...over }),
+    refund: (userId: string, orderId: string, over: Record<string, unknown> = {}) =>
+      call(s.baseUrl, "POST", "/refund", { eventId: uid("refund"), userId, orderId, ...over }),
+    balance: async (userId: string) => (await call(s.baseUrl, "GET", `/balance/${userId}`)).body,
+    settle: async () => (await call(s.baseUrl, "POST", "/admin/settle")).body,
+    reconcile: async () => (await call(s.baseUrl, "GET", "/admin/reconcile")).body,
+  };
+}
+
+/**
+ * A chain that fails at chosen moments, to test crashes. It wraps the real chain, so
+ * everything that does reach the chain really happens there.
+ */
+export class FlakyChain implements Chain {
+  /** The next N sends fail before reaching the chain (a dropped connection). */
+  beforeSend = 0;
+  /** The next N sends reach the chain and confirm, then fail (the process died before saving the hash). */
+  afterSend = 0;
+  /** The next N waits for confirmation fail (the process died while waiting). */
+  duringWait = 0;
+  /** Every call fails (the chain cannot be reached). */
+  down = false;
+  /** isProcessed always says "no", even when the chain knows the reference (the first safety check is wrong). */
+  denyProcessed = false;
+  /** If set, beforeSend and afterSend only apply to sends for this user. */
+  only?: Address;
+  /** How many sends really reached the chain. */
+  sends = 0;
+
+  constructor(private readonly inner: Chain) {}
+
+  private applies(user: Address): boolean {
+    return this.only === undefined || this.only === user;
+  }
+
+  async isProcessed(ref: Hex): Promise<boolean> {
+    if (this.down) throw new Error("chain unreachable");
+    if (this.denyProcessed) return false;
+    return this.inner.isProcessed(ref);
+  }
+
+  async send(op: ChainOp, user: Address, amount: bigint, ref: Hex): Promise<Hex> {
+    if (this.down) throw new Error("chain unreachable");
+    if (this.applies(user) && this.beforeSend > 0) {
+      this.beforeSend--;
+      throw new Error("connection dropped before sending");
+    }
+    const hash = await this.inner.send(op, user, amount, ref);
+    this.sends++;
+    if (this.applies(user) && this.afterSend > 0) {
+      this.afterSend--;
+      await this.inner.waitForReceipt(hash);
+      throw new Error("process died after sending");
+    }
+    return hash;
+  }
+
+  async waitForReceipt(hash: Hex): Promise<void> {
+    if (this.down) throw new Error("chain unreachable");
+    if (this.duringWait > 0) {
+      this.duringWait--;
+      throw new Error("process died while waiting");
+    }
+    return this.inner.waitForReceipt(hash);
+  }
+
+  balanceOf(user: Address): Promise<bigint> {
+    if (this.down) throw new Error("chain unreachable");
+    return this.inner.balanceOf(user);
+  }
+}

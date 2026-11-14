@@ -10,7 +10,7 @@ Requires Node 22.13+.
 
 ```bash
 npm install
-npm test          # builds the contract, then runs the contract tests and the service tests (11) against a real local chain
+npm test          # builds the contract, then runs the contract tests (8) and the service tests (32) against a real local chain
 npm run deploy    # deploy to an in-process chain, reward and redeem a demo user
 ```
 
@@ -30,20 +30,30 @@ curl -s -X POST localhost:3000/spend -H 'content-type: application/json' \
 curl -s localhost:3000/balance/alice       # ledger 60, on-chain 60, inSync true
 ```
 
+Now a refund and the check that compares the ledger with the chain (the `/admin` routes are on by default only against a local chain):
+
+```bash
+# the 40 points Alice spent are gone, so a refund of ord_1 takes back her remaining 60 and records 40 as debt
+curl -s -X POST localhost:3000/refund -H 'content-type: application/json' \
+  -d '{"eventId":"ref_1","userId":"alice","orderId":"ord_1"}'
+curl -s localhost:3000/balance/alice       # ledger 0, debt 40; her next reward pays the 40 first
+curl -s localhost:3000/admin/reconcile     # ok true: the chain agrees with the ledger, nothing stuck
+```
+
 The first time, `npm run deploy:local` needs the chain from step 1 to be running. Settings are environment variables (`PORT`, `RPC_URL`, `TOKEN_ADDRESS`, `REWARD_RATE_BPS`, ...); see `service/src/config.ts`.
 
 ## Repo layout
 
 | Folder | Contents | Status |
 |---|---|---|
-| `docs/` | intent, questions, plan, feasibility, proposal, follow-up, final directive, AI log | Day 1–2 docs done (feasibility added) |
+| `docs/` | intent, questions, plan, feasibility, proposal, follow-up, final directive, AI log | Day 1–2 docs done (feasibility added); plan, questions and AI log updated on Day 3 |
 | `contracts/` | `RewardToken.sol`: closed-loop ERC-20 on OpenZeppelin, tests, deploy script | ✅ Day 1 |
-| `service/` | Ledger API and chain settler: earn, spend, balance ✅ Day 2 (duplicates and overspend covered); refund clawback and reconciliation Day 3 | Day 2 done |
+| `service/` | Ledger API and chain settler: earn, spend, balance ✅ Day 2; refund with debt, crash recovery tests and the reconciliation check ✅ Day 3 | Day 3 done |
 | `demo/` | One-page partner-app demo | Day 4 |
 
 ## The contract in one paragraph
 
-`RewardToken` is an ERC-20 built on audited OpenZeppelin code. Only our backend (the *issuer*) can create tokens (`reward`) or destroy them (`redeem`, also used for refund clawback). Users cannot send tokens to each other, so the token cannot be traded or cashed out. Every operation carries a unique reference from our ledger, and the contract rejects a reference it has already seen, so a retried transaction can never mint or burn twice.
+`RewardToken` is an ERC-20 built on audited OpenZeppelin code. Only our backend (the *issuer*) can create tokens (`reward`) or destroy them (`redeem`, also used for refund clawback). A second key, the *admin*, decides who the issuer is: it can take the issuer key away and name a new one, but it cannot create or destroy tokens itself. So the partner can hold the admin key if they want a say. Users cannot send tokens to each other, so the token cannot be traded or cashed out. Every operation carries a unique reference from our ledger, and the contract rejects a reference it has already seen, so a retried transaction can never mint or burn twice.
 
 ## How the service works
 
@@ -51,7 +61,12 @@ The first time, `npm run deploy:local` needs the chain from step 1 to be running
 2. **The chain follows.** A background *settler* sends each ledger entry to the contract, oldest first and one at a time per user, so a spend is never sent before the earn that funds it.
 3. **Retries are safe in two places.** The ledger refuses a repeated `eventId` (the partner's payment or checkout id). The settler asks the contract "have you seen this reference?" before every send, and the contract itself refuses a reference twice. If the service dies after sending a transaction, the next run notices and does not send it again.
 4. **Overspending is blocked twice.** The ledger checks the balance inside a transaction, and a database trigger refuses any spend that would go below zero even if application code is wrong.
-5. **`GET /balance/:userId`** shows the ledger balance next to the chain. `inSync` means the chain equals the confirmed part of the ledger, with no unexplained difference; entries still waiting are counted in `unsettledEntries`.
+5. **Refunds are never blocked.** `POST /refund` takes back the points the order earned, up to what the user still holds. The part already spent becomes a debt. The user's next reward pays the debt first, so the customer never pays extra cash. One refund per order.
+6. **Crashes are handled by the same two checks.** The tests kill the service at the bad moments (after sending, while waiting, chain down, two settlers at once) and check that no points are minted twice. An entry that fails 5 times is marked *stuck*. It holds back only that user, and shows up in the reconciliation report until a person requeues it.
+7. **`GET /admin/reconcile` compares the ledger with the chain**, user by user. It reports differences and stuck entries and changes nothing, because the right fix depends on the cause.
+8. **`GET /balance/:userId`** shows the ledger balance next to the chain. `inSync` means the chain equals the confirmed part of the ledger, with no unexplained difference; entries still waiting are counted in `unsettledEntries`, and `debt` shows what the user still owes from refunds.
+
+The test files run one at a time (`--test-concurrency=1`), because they share one local chain and one issuer account.
 
 Stand-ins in this proof, each replaced in the real delivery (see `docs/feasibility.md`): wallet addresses are derived from the user id instead of coming from a wallet vendor; the issuer key is Hardhat's public test key instead of a managed key service; the API has no authentication or webhook signing; SQLite becomes Postgres. With SQLite in one process the overspend check is trivially atomic; on Postgres it needs a row lock or constraint, and the same tests would catch a race.
 

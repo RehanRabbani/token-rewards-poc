@@ -25,6 +25,17 @@ export interface EntryRow {
   updated_at: string;
 }
 
+export interface RefundRow {
+  id: number;
+  event_id: string;
+  user_id: string;
+  order_id: string;
+  points_due: number; // what the order had earned
+  taken_back: number; // the part the user still held, taken back now
+  debt_created: number; // the part already spent, owed and netted against future rewards
+  created_at: string;
+}
+
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS ledger_entries (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,11 +57,37 @@ CREATE TABLE IF NOT EXISTS ledger_entries (
 CREATE INDEX IF NOT EXISTS idx_entries_user   ON ledger_entries (user_id, id);
 CREATE INDEX IF NOT EXISTS idx_entries_status ON ledger_entries (status, id);
 
--- Backstop: even if application code has a bug, the database itself refuses
--- a spend that would take a user's balance below zero.
-CREATE TRIGGER IF NOT EXISTS no_overspend
+-- A refund is never blocked. We take back what the user still holds; the part they
+-- already spent is recorded here as debt and netted against their next rewards.
+CREATE TABLE IF NOT EXISTS refunds (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_id     TEXT    NOT NULL UNIQUE,   -- the partner's refund event id: a retry cannot refund twice
+  user_id      TEXT    NOT NULL,
+  order_id     TEXT    NOT NULL,
+  points_due   INTEGER NOT NULL CHECK (points_due >= 0),
+  taken_back   INTEGER NOT NULL CHECK (taken_back >= 0),
+  debt_created INTEGER NOT NULL CHECK (debt_created >= 0),
+  created_at   TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+  UNIQUE (user_id, order_id),             -- one refund per order
+  CHECK (taken_back + debt_created = points_due)
+);
+
+CREATE TABLE IF NOT EXISTS debts (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    TEXT    NOT NULL,
+  refund_id  INTEGER NOT NULL REFERENCES refunds (id),
+  amount     INTEGER NOT NULL CHECK (amount > 0),
+  remaining  INTEGER NOT NULL CHECK (remaining >= 0 AND remaining <= amount),
+  created_at TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE INDEX IF NOT EXISTS idx_debts_user ON debts (user_id, id);
+
+-- Backstop: even if application code has a bug, the database itself refuses a spend
+-- or a clawback that would take a user's balance below zero.
+DROP TRIGGER IF EXISTS no_overspend;
+CREATE TRIGGER no_overspend
 BEFORE INSERT ON ledger_entries
-WHEN NEW.kind = 'spend'
+WHEN NEW.kind IN ('spend', 'clawback')
  AND (SELECT COALESCE(SUM(amount), 0) FROM ledger_entries WHERE user_id = NEW.user_id) + NEW.amount < 0
 BEGIN
   SELECT RAISE(ABORT, 'INSUFFICIENT_BALANCE');

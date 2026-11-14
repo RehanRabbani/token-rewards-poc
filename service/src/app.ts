@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { Chain } from "./chain.ts";
 import { AppError } from "./errors.ts";
 import type { Ledger, WriteResult } from "./ledger.ts";
+import { reconcile } from "./reconcile.ts";
 import type { Settler } from "./settler.ts";
 import { addressFor } from "./wallets.ts";
 
@@ -10,7 +11,7 @@ export interface AppDeps {
   ledger: Ledger;
   settler: Settler;
   chain: Chain;
-  /** Exposes POST /admin/settle. Off unless explicitly enabled; the proof has no authentication. */
+  /** Exposes the /admin routes (settle, reconcile, requeue-stuck). Off unless explicitly enabled; the proof has no authentication. */
   enableAdmin: boolean;
 }
 
@@ -34,6 +35,12 @@ const spendBody = z.strictObject({
   points: z.number().int().positive().max(1_000_000),
 });
 
+const refundBody = z.strictObject({
+  eventId: id, // the partner's unique refund id: a retry cannot refund twice
+  userId: id,
+  orderId: id, // the order being refunded; its earned points are taken back
+});
+
 export function createApp(deps: AppDeps) {
   const { ledger, settler, chain } = deps;
   const app = express();
@@ -45,6 +52,7 @@ export function createApp(deps: AppDeps) {
     userId,
     entryId: r.entry?.id ?? null,
     points: r.points,
+    ...(kind === "earn" ? { appliedToDebt: r.appliedToDebt } : {}),
     status: r.entry?.status ?? null,
     duplicate: r.duplicate,
     balance: ledger.balance(userId).ledgerBalance,
@@ -66,6 +74,27 @@ export function createApp(deps: AppDeps) {
     const body = spendBody.parse(req.body);
     const result = ledger.spend(body);
     res.status(result.duplicate ? 200 : 201).json(view("spend", body.userId, result));
+  });
+
+  // The partner refunds an order: take back the points it earned. Never blocked.
+  //   takenBack     the part the user still held
+  //   debtCreated   the part already spent: owed, and netted against their next rewards
+  app.post("/refund", (req, res) => {
+    const body = refundBody.parse(req.body);
+    const r = ledger.refund(body);
+    const b = ledger.balance(body.userId);
+    res.status(r.duplicate ? 200 : 201).json({
+      kind: "refund",
+      userId: body.userId,
+      orderId: r.orderId,
+      pointsDue: r.pointsDue,
+      takenBack: r.takenBack,
+      debtCreated: r.debtCreated,
+      entryId: r.entry?.id ?? null,
+      duplicate: r.duplicate,
+      balance: b.ledgerBalance,
+      debt: b.debt,
+    });
   });
 
   // What the app shows (ledger) next to what the chain holds.
@@ -94,6 +123,16 @@ export function createApp(deps: AppDeps) {
   if (deps.enableAdmin) {
     app.post("/admin/settle", async (_req, res) => {
       res.json(await settler.runOnce());
+    });
+
+    // Read-only check: does the ledger agree with the chain? Lists differences and stuck entries.
+    app.get("/admin/reconcile", async (_req, res) => {
+      res.json(await reconcile(ledger, chain));
+    });
+
+    // After a person has looked at the stuck entries: put them back in the queue.
+    app.post("/admin/requeue-stuck", (_req, res) => {
+      res.json({ requeued: settler.requeueStuck() });
     });
   }
 

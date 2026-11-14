@@ -44,6 +44,18 @@ export class Settler {
     }
   }
 
+  /**
+   * Put stuck entries back in the queue, after a person has looked at why they failed.
+   * Safe to repeat: the settler asks the chain first, so nothing is sent twice.
+   * Note that a stuck entry holds back that user's later entries (never other users').
+   */
+  requeueStuck(): number {
+    const result = this.db
+      .prepare(`UPDATE ledger_entries SET status = 'pending', attempts = 0, updated_at = ${NOW} WHERE status = 'stuck'`)
+      .run();
+    return Number(result.changes);
+  }
+
   /** The oldest unsettled entry whose user has nothing unsettled before it. */
   private nextEligible(skip: Set<number>): EntryRow | undefined {
     const candidates = this.db

@@ -63,6 +63,21 @@ These five can change the architecture or the 6-week date. Everything else can b
 | P21 | Has your legal team reviewed a token programme? | Legal sign-off is on the critical path | Not yet; must happen by week 2 |
 | P22 | What do users redeem tokens for: physical goods and services, or digital goods and features unlocked inside the app? | iOS in-app-purchase rules may apply to digital goods | Physical goods and services consumed outside the app |
 
+### Refunds (added Day 3, while building the refund rule)
+
+| # | Question | Why it matters | Assumption if unanswered |
+|---|---|---|---|
+| P23 | Do you refund whole orders only, or also part of an order? | The proof takes back all points of an order, once | Whole orders only in v1; partial refunds come later |
+| P24 | Can a refund event reach us before the payment event for the same order, or late? | A refund that arrives first would not take back points that are rewarded afterwards | No, events arrive in order. If they can, we add a hold for refunded orders |
+| P25 | If a customer paid part of the refunded order with points, do those points go back to the customer? | The proof takes back the reward but does not give spent points back | No, v1 does not restore spent points |
+| P26 | If a customer has a debt and never earns again, who carries it and for how long? | The debt is only paid from future rewards | It stays until paid; written off after 12 months (same as expiry) at the partner's cost |
+
+### Control of the token (added Day 3)
+
+| # | Question | Why it matters | Assumption if unanswered |
+|---|---|---|---|
+| P27 | Do you want to hold the admin key, so you can replace our issuer key if you ever need to? Or should we hold both keys in the pilot? | It decides who can stop us. Holding a key also means keeping it safe, and losing it cannot be fixed | We hold both keys in the pilot. The partner can take the admin key from the start or later, if they ask |
+
 ---
 
 ## B. Questions for our BD team
@@ -77,6 +92,7 @@ These five can change the architecture or the 6-week date. Everything else can b
 | B6 | What engineering capacity do we have for 6 weeks? | Sets what is realistic | Me plus 2 engineers |
 | B7 | Are other partners asking for the same thing? | Justifies building a product rather than a project | Yes, at least one |
 | B8 | Who talks to the partner day to day: BD or me? | Ownership of the follow-up | BD owns the relationship, I own technical delivery, weekly joint call |
+| B9 | Who looks at the daily reconciliation report and stuck entries during the pilot, and how fast must they act? | A difference or a stuck entry is only useful if a named person sees it | I check it every day during the pilot; stuck entries are looked at the same day |
 
 ---
 
@@ -98,6 +114,8 @@ Each assumption names the risk if it is wrong, so it can be checked first.
 | A10 | **About 100k MAU, up to 20k reward events per day** | Higher volume changes batching and cost, not the design |
 | A11 | **Tokens are redeemed on physical goods or services**, not digital goods unlocked inside the iOS app | App Store in-app-purchase rules may apply; needs an App Store check, with web-first as the fallback |
 | A12 | **Refund after a reward was spent:** the refund is never blocked; we claw back what the user still holds and record the shortfall as debt netted against future rewards | If the partner prefers to absorb the loss, the proof changes in one place (decision D11 in `plan.md`) |
+| A13 | **One full refund per order in v1;** debt stays until future rewards pay it, and is written off after 12 months at the partner's cost | Partial refunds, restoring spent points or a different debt rule change the refund code (decisions D11 and D14 in `plan.md`) |
+| A14 | **We hold both token keys (issuer and admin) in the pilot** | If the partner wants the admin key, we add key-storage setup in week 1 (feasibility section 4, decision D17) |
 
 ## D. What would change the plan most
 

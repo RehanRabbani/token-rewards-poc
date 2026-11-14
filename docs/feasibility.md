@@ -1,8 +1,8 @@
 # Feasibility check
 
-> Day 2. Answers: *what are the options, what could go wrong, what does it depend on, and what is realistic in 6 weeks?*
-> Built on the assumptions in `questions.md` (A1–A10). Where an answer needs the partner, BD or a lawyer, it says so. **This is a technical and commercial assessment, not legal advice.**
-> Regulatory and vendor facts were checked against public sources on Day 2; they are listed at the end with a confidence note.
+> Day 2. This file answers four questions: what are our options, what could go wrong, what do we depend on, and what can we really do in 6 weeks?
+> It is built on the assumptions in `questions.md` (A1 to A14). When an answer needs the partner, BD or a lawyer, the file says so. **This is a technical and business check. It is not legal advice.**
+> I checked the rules and vendor facts against public sources on Day 2. The sources are listed at the end, with how much I trust each one.
 
 ## 1. Recommendation in one paragraph
 
@@ -10,35 +10,37 @@ We launch a small pilot with one main flow: a user buys something, earns reward 
 
 Some things we cannot do in 6 weeks, and we say so now: a token that users can send to each other, sell or cash out; paying with crypto or stablecoins; and a launch to all users with a full outside security check (an audit).
 
-## 2. What the partner asked, and what each part really means
+## 2. What the partner asked, and what each part could mean
 
-| The partner said | Could mean | What we assume (and how it fits 6 weeks) |
+| The partner said | It could mean | What we assume |
 |---|---|---|
-| "pay … with a token" | (a) pay for goods with crypto, or (b) redeem reward points as payment | **(b).** Redeem tokens as a discount on in-app purchases. (a) is phase 2: it needs licensing, accounting and, on iOS, care around in-app-purchase rules |
-| "earn rewards" | Tokens granted on purchases and maybe other actions | Purchases only in v1; each earning trigger is an integration and an abuse vector |
-| "a token" | A real crypto asset, or a branded point | A **closed-loop token**: earned, never bought, sold, transferred or cashed out |
-| "inside our app" | Users see crypto, or just a balance | Users see a **balance**; the wallet is created and held for them |
-| "launch in 6 weeks" | Everyone, or a pilot | **Capped pilot** with a go/no-go gate before wider rollout |
+| "pay … with a token" | (a) pay for goods with crypto, or (b) use reward points to pay | **(b).** Users use tokens as a discount on purchases in the app. (a) is phase 2. It needs licenses, accounting, and extra care with Apple's in-app purchase rules |
+| "earn rewards" | Points for purchases, and maybe for other actions too | Purchases only in version 1. Every other way to earn needs extra work and is easier to cheat |
+| "a token" | A real crypto coin, or just a branded point | A **closed-loop token**: users can only earn it. It cannot be bought, sold, sent to others or cashed out |
+| "inside our app" | Users see crypto, or only see a balance | Users see a **balance**. We create and hold the wallet for them |
+| "launch in 6 weeks" | Everyone gets it, or a small pilot | A **small pilot**, with a go or no-go decision before we open it to more users |
 
-## 3. Options
+## 3. Our options
 
-| | **A. Points (ledger only)** | **B. Closed-loop token on an L2 (recommended)** | **C. Transferable / tradable token** | **D. Pay in stablecoin + reward token** |
+We compared four ways to build this.
+
+| | **A. Points only** | **B. Closed-loop token (recommended)** | **C. Token users can trade** | **D. Pay with a stablecoin, earn a token** |
 |---|---|---|---|---|
-| What it is | Balances in our database, no chain | Same ledger, plus an on-chain token mirroring every balance change | Token users can send, sell or list on exchanges | Users pay with USDC or similar; rewards in a token |
-| Fits the "token" ask | Weak | **Good** | Strong | Strong |
-| Realistic by week 6 | Yes | **Yes, as a capped pilot** | No | No |
-| Regulatory exposure | Lowest | Low *if* closed-loop holds (legal sign-off needed) | High: crypto-asset, securities, money-transmission rules | High: payments and money-transmission licensing |
-| Build and run cost | Lowest | Medium: adds contract, key custody, chain worker, reconciliation | High: audit, legal, exchange/market-making issues | High |
-| Reusable for the next partner | Yes (the ledger) | **Yes (ledger plus the on-chain layer)** | Partly | Partly |
-| Main risk | Looks like "just points" | Ledger and chain drift apart; key theft | Legal, price volatility, speculation | Licensing, refunds, accounting, app-store rules |
+| What it is | Balances kept in our database. No blockchain | The same ledger, plus a token on a blockchain that copies every balance change | A token users can send, sell, or list on exchanges | Users pay with a dollar-linked coin (a stablecoin, like USDC) and earn a token as a reward |
+| Fits the "token" ask? | Weak | **Good** | Strong | Strong |
+| Possible by week 6? | Yes | **Yes, as a small pilot** | No | No |
+| Legal risk | Lowest | Low, *if* the token stays closed (a lawyer must confirm) | High. Crypto, securities and money-transfer laws can apply | High. Payment and money-transfer licenses |
+| Cost to build and run | Lowest | Medium. We add a contract, key storage, a worker that sends entries to the chain, and a check that both sides agree | High. Audit, legal work, trading problems | High |
+| Can we reuse it for the next partner? | Yes (the ledger) | **Yes (the ledger and the blockchain part)** | Partly | Partly |
+| Biggest risk | Looks like "just points" | The app and the blockchain stop agreeing, or the signing key is stolen | Legal trouble, price swings, speculation | Licenses, refunds, accounting, app store rules |
 
-My judgment, to validate on the first partner call. **B is built on top of A**: if B is blocked, the pilot ships as A on the same date. That makes B a low-regret choice. C and D are phase 2 at the earliest and only after legal sign-off.
+My view, to check on the first call with the partner: **B is built on top of A.** If B is blocked, we launch A on the same date. So B is a safe choice. C and D wait for phase 2, and only after a lawyer says yes.
 
 ## 4. Why use a blockchain at all?
 
 The partner's CTO will ask this first, so here is the honest answer.
 
-For the first version, the blockchain does not add much for the user. The user sees a points balance either way, and a normal database can do the whole job. It also does not mean "no single boss" here. In our design only our service can create or remove tokens, so we are the one administrator.
+For the first version, the blockchain does not add much for the user. The user sees a points balance either way, and a normal database can do the whole job. It also does not mean "no single boss" here. In our design only our service can create or remove tokens, so we are the one administrator, unless the partner takes the admin key (see the option below).
 
 There are still some reasons to use it. They are about what comes after version 1:
 
@@ -53,18 +55,38 @@ What happened to others: Starbucks closed its NFT loyalty test, called Odyssey, 
 
 Our rule: if the partner cannot say why they want a token, we recommend plain points.
 
-## 5. Regulation: what we know and what must be confirmed
+### An option: the partner holds the admin key
 
-> Rules differ by country and change quickly. Everything here goes to counsel for the partner's actual markets (question P11).
+The token has two keys, like two keys to a shop:
+- The **issuer key** gives points to users and takes them back. Our service uses it every day.
+- The **admin key** decides who holds the issuer key. It can take the issuer key away and give it to someone else. It cannot create or remove points itself.
 
-| Area | What public sources say | What it means for our design |
+| | Pilot default: we hold both keys | Option: the partner holds the admin key |
 |---|---|---|
-| **EU (MiCA)** | Digital assets that cannot be transferred to other holders are outside MiCA; the example given is loyalty points that can be exchanged for benefits only with the issuer [1][2]. But reward and loyalty tokens that *are* transferable can fall under MiCA's "other crypto-asset" category [3] | Closed-loop and non-transferable keeps us out of scope. **Making the token transferable is the line that changes the answer.** |
-| **US (FinCEN)** | A person who creates units of virtual currency and uses them to buy goods and services is a "user", not a money transmitter; selling convertible virtual currency for real currency is money transmission [4]. Closed-loop prepaid access is exempt only up to $2,000 per day [5] | **Never sell the token for money; never allow cash-out.** State money-transmitter laws are separate and can differ |
-| **Apple App Store** | Crypto apps may not offer currency for completing tasks such as downloading apps or posting to social networks [6]. Where payment unlocks features or functionality, apps may only use in-app purchase currencies [7]. Coverage also notes crypto cannot be an alternative to in-app purchase [6] | Rewards for **purchases** are lower risk than rewards for social tasks. If the partner sells **digital goods**, redeeming tokens for them needs an App Store review of how it works. **Verify against Apple's current guidelines**: they changed after recent court rulings and I could not open Apple's page directly |
-| **Consumer law, tax and accounting** | Not researched | Outstanding points are a liability on the partner's books; expiry and refund rules need local legal review |
+| Who does the daily work | Us | Us |
+| Who can replace the issuer key | Us | The partner |
+| What the partner must do | Nothing | Keep one key very safe. If they lose it, nobody can replace a broken or stolen issuer key |
+| Extra setup | None | Some extra work in week 1 to set up safe key storage (to estimate with the partner) |
+| Why choose it | Simplest and fastest | Neither side has full control alone. It is a real answer to "why a blockchain?" |
 
-**Result:** our closed-loop, earn-only, no-cash-out, purchase-triggered design is the version most likely to pass legal review. That is why it is the recommendation, not just because it is simpler.
+The contract tests show that this works. The admin can take the issuer's key away, and the old issuer can no longer give points. The issuer cannot give out roles. The admin cannot create points.
+
+One honest limit: this controls who can write to the token on the blockchain. The ledger is still our database, so it does not give the partner control of the ledger. The partner can stop us from changing the token, and can check the token's records. We say this clearly, so nobody thinks it gives more.
+
+Our suggestion: in the pilot we hold both keys, because it is simpler. We offer the partner-holds-admin version as a choice, now or later. The partner decides (question P27).
+
+## 5. Rules and laws: what we know and what we must confirm
+
+> Rules differ by country and change fast. A lawyer must check everything here for the partner's real countries (question P11).
+
+| Area | What public sources say | What it means for us |
+|---|---|---|
+| **EU (MiCA, the EU crypto law)** | Digital assets that cannot be passed to other holders are outside MiCA. The example given is loyalty points that can only be swapped for benefits with the company that issued them [1][2]. But reward tokens that *can* be passed on may be covered, as "other crypto-assets" [3] | If the token is closed and cannot be transferred, we stay outside MiCA. **Letting users transfer the token is the line that changes the answer.** |
+| **US (FinCEN, the US agency against money crime)** | Someone who creates virtual currency units and uses them to buy goods and services is a "user", not a money transmitter. Selling convertible virtual currency for real money is money transmission [4]. A closed-loop prepaid access program is exempt only up to $2,000 per day [5] | **Never sell the token for money. Never allow cash-out.** Each US state also has its own money-transfer laws, and they can be different |
+| **Apple App Store** | Crypto apps may not give currency for tasks like downloading apps or posting on social networks [6]. When payment unlocks features, apps may only use in-app purchase currencies [7]. News coverage also says crypto cannot replace in-app purchase [6] | Rewards for **purchases** are lower risk than rewards for social tasks. If the partner sells **digital goods**, using tokens for them needs an App Store check of how it works. **Please verify against Apple's current rules.** They changed after recent court rulings, and I could not open Apple's own page |
+| **Consumer law, tax and accounting** | I did not research this | Points the user has not spent are a debt on the partner's books. Expiry and refund rules need a local legal review |
+
+**Result:** the closed-loop version (earn only, no cash-out, rewards for purchases) is the one most likely to pass a legal review. That is the real reason we recommend it. It is simpler too, but that is not the main reason.
 
 ## 6. Token economics (the questions BD gets asked first)
 
@@ -93,72 +115,76 @@ The customer does not pay any extra cash. The missing points are only taken from
 
 ## 7. Cost sketch
 
-| Item | Estimate | Basis |
+| Item | Estimate | Where it comes from |
 |---|---|---|
-| Chain fees | Base says its fees are under a cent per transaction [10]. At the assumed 20,000 on-chain operations a day, that is **at most about $200/day**, probably far less | Upper bound. **To measure in week 2.** Batching settlements (the ledger is the source of truth, so the chain can settle in batches) can cut this |
-| Gas sponsorship for users | Coinbase's paymaster has been reported at $15 of sponsored gas per app per month free, then $0.0001 per sponsored transaction [11]; Base documents a monthly sponsorship limit but its figure varies between pages ($10k–$15k) [10][12] | Check current terms when choosing a vendor. In the proof our service pays gas directly, so users never need it |
-| Wallet vendor | Coinbase's embedded wallets reached general availability in October 2025 and list the first 5,000 wallet operations per month free [13] | Pricing and ownership change often (Privy was acquired by Stripe in 2025 [14]; Dynamic by Fireblocks [13]). Compare at week 1, don't lock in now |
-| Security review | Not priced | A full external audit usually does not fit in 6 weeks; see section 9 |
+| Blockchain fees | Base (the blockchain we would use) says its fees are under one cent per transaction [10]. With the 20,000 operations a day that we assumed, that is **at most about $200 a day**, probably much less | This is an upper limit. **We measure the real cost in week 2.** We can send entries in batches to cut it, because our ledger is the source of truth |
+| Paying fees for users ("gas") | A paymaster is a service that pays blockchain fees for users. One report says Coinbase's paymaster gives $15 of sponsored fees per app per month for free, then charges $0.0001 per sponsored transaction [11]. Base's own pages mention a monthly limit, but the number differs between pages ($10k to $15k) [10][12] | Check the current terms when we pick a vendor. In the proof, our service pays the fees itself, so users never need to |
+| Wallet vendor | Coinbase's embedded wallets became generally available in October 2025. The first 5,000 wallet operations each month are free [13] | Prices and owners of these companies change often. Stripe bought Privy in 2025 [14], and Fireblocks bought Dynamic [13]. We compare vendors in week 1 and do not commit yet |
+| Security review | Not priced | A full outside audit usually does not fit in 6 weeks (see section 9) |
 
 ## 8. Risks
 
-*Likelihood and impact: H, M, L. These are my estimates.*
+*Chance and damage: H = high, M = medium, L = low. These are my own estimates.*
 
-| # | Risk | L | I | Mitigation | Owner |
+| # | Risk | Chance | Damage | What we do | Owner |
 |---|---|---|---|---|---|
-| R1 | Legal does not approve the closed-loop design by week 2 | M | H | Brief counsel in week 1; **fallback: ship as ledger-only (Option A)** on the same date | BD + partner legal |
-| R2 | Scope creep: partner asks for transfers, cash-out or crypto payments | H | H | "Out of scope" list signed in week 1; changes go to phase 2 | Tech lead + BD |
-| R3 | Ledger and chain drift apart | M | H | Ledger is the source of truth; unique references on both sides; daily reconciliation with alerts. **This is what the proof demonstrates** | Tech lead |
-| R4 | Minting key stolen | L | H | Key in a managed key service, never in code; spend caps; a total supply cap in the contract; kill switch | Tech lead |
-| R5 | Contract bug | L | H | Built on audited OpenZeppelin code with minimal custom logic; tests; independent review before mainnet; a pilot cap limits the damage | Tech lead |
-| R6 | Reward abuse (self-purchase and refund loops, fake accounts) | H | M | Rewards only on settled payments; caps; clawback rule; monitoring | Tech lead + partner |
-| R7 | Partner's engineers are not available for the app integration | M | H | Agree their capacity in week 1; provide a small SDK and a mock server so they can start early | BD + partner |
-| R8 | App Store review problems | M | M | Early check of the rules; submit early with a feature flag; rewards tied to purchases | Partner |
-| R9 | Chain or RPC outage | M | L | The app never waits on the chain: users see ledger balances; the chain worker retries | Tech lead |
-| R10 | Vendor lock-in or vendor change (wallets, custody) | M | M | Wallet and key service sit behind our own interface; compare vendors in week 1 | Tech lead |
-| R11 | Gas costs higher than expected | L | M | Measure in week 2; batch settlements | Tech lead |
+| R1 | The lawyers do not approve the closed-loop design by week 2 | M | H | Brief the lawyers in week 1. **Backup: launch with plain points (option A) on the same date** | BD + partner legal |
+| R2 | The scope grows: the partner asks for transfers, cash-out or crypto payments | H | H | Sign an "out of scope" list in week 1. New asks go to phase 2 | Tech lead + BD |
+| R3 | The ledger and the blockchain stop agreeing | M | H | The ledger is the source of truth. Both sides refuse a repeated reference. A check every day sends an alert if they differ. **This is what the proof shows** | Tech lead |
+| R4 | The signing key is stolen (the key that can create tokens) | L | H | Keep the key in a managed key service, never in code. Spending limits, a cap on the total number of tokens in the contract, and a kill switch | Tech lead |
+| R5 | A bug in the contract | L | H | We use OpenZeppelin code (a widely used, audited library) and add very little of our own. Tests. An independent review before the real launch. The pilot cap limits the damage | Tech lead |
+| R6 | Cheating: buying and refunding in a loop, fake accounts | H | M | Rewards only after a payment is confirmed. Limits. The refund rule in section 6. We watch for strange patterns | Tech lead + partner |
+| R7 | The partner's engineers are not free to build the app part | M | H | Agree their time in week 1. We give them a small SDK (a ready-made code package) and a mock server (a fake copy of our service) so they can start early | BD + partner |
+| R8 | Apple or Google reject the app | M | M | Check the rules early. Submit early, behind a feature switch. Rewards only for purchases | Partner |
+| R9 | The blockchain or its access provider goes down | M | L | The app never waits for the chain. Users see ledger balances, and our worker tries again later | Tech lead |
+| R10 | We get locked in to a vendor, or a vendor changes (wallets, key storage) | M | M | Keep wallets and keys behind our own interface. Compare vendors in week 1 | Tech lead |
+| R11 | Blockchain fees are higher than expected | L | M | Measure in week 2. Send entries in batches | Tech lead |
+| R12 | The partner loses the admin key (only if they hold it) | L | M | Keep it in a managed key service with a backup. Write the recovery steps in the runbook | Partner |
 
-## 9. What is realistic in 6 weeks
+## 9. What we can do in 6 weeks
 
-**Definition of "launch": a capped pilot** (5–10% of users, a spending cap and a kill switch), judged by a go/no-go after 2–4 weeks. A **full external security audit** is not planned inside the 6 weeks; it moves to before wider rollout. The pilot's limits (a hard supply cap, daily caps, a kill switch) are what make launching without a full audit acceptable. The partner must agree to that explicitly.
+**"Launch" means a small pilot:** 5 to 10 percent of users, a spending limit, and a kill switch (one switch that stops earning and spending). After 2 to 4 weeks we decide go or no-go for more users.
+
+We do **not** plan a full outside security audit inside the 6 weeks. It moves to before the wider rollout. We can launch without it because the pilot has hard limits: a cap on the total number of tokens, daily limits, and the kill switch. The partner must clearly agree to this.
 
 | Week | Work | Gate at the end |
 |---|---|---|
-| **1** | Close open questions; sign scope and out-of-scope list; brief legal; choose chain, wallet and key vendors; agree the API contract and the partner's webhooks; set up environments | **Scope signed; legal engaged** |
-| **2** | Ledger service and contract on a public test network; payment and refund webhooks wired in; measure gas cost | **Legal go/no-go.** No: switch off the on-chain mirror and continue as ledger-only |
-| **3** | Wallet and key-service integration; partner app shows balance and redeems at checkout; admin tools (look-up, freeze, adjust) | End-to-end working on the partner's staging |
-| **4** | Hardening: failure tests, reconciliation, monitoring, caps, kill switch; independent review of contract and service; load test | **Release quality bar met** (see `followup.md`) |
-| **5** | Partner user-acceptance testing; app-store submission; runbook and support training; deploy to mainnet only after the bar is met | **Release candidate approved** |
-| **6** | **Pilot launch** behind a flag; daily reconciliation; track the success metric from question P4 | **Pilot live**; go/no-go on wider rollout set for 2–4 weeks later |
+| **1** | Answer the open questions. Sign the scope and the out-of-scope list. Brief the lawyers. Choose the blockchain, wallet and key vendors. Agree how the partner's payment messages (webhooks) reach us. Set up test environments | **Scope signed. Lawyers started** |
+| **2** | Build the ledger service and the contract on a public test blockchain. Connect the payment and refund messages. Measure the fees | **Legal go or no-go.** If no, we switch off the blockchain copy and continue with plain points |
+| **3** | Connect the wallet and key service. The partner's app shows the balance and lets users redeem at checkout. Admin tools: look up a user, freeze, adjust | Works from start to finish on the partner's test setup (staging) |
+| **4** | Make it strong: failure tests, the daily check, monitoring, limits, the kill switch. An independent review of the contract and the service. A load test | **Release quality bar met** (see `followup.md`) |
+| **5** | The partner tests it (user-acceptance testing). Submit to the app stores. Write the runbook (a step-by-step guide for problems) and train support. Go live on the real blockchain only after the bar is met | **Release candidate approved** |
+| **6** | **Pilot launch**, behind a feature switch. Check every day that the ledger and the chain agree. Track the success measure from question P4 | **Pilot is live.** The go or no-go for more users comes 2 to 4 weeks later |
 
-### In and out of scope for the 6 weeks
+### What is in and out of the 6 weeks
 
 | In | Out (phase 2 or later) |
 |---|---|
-| Earn on settled purchases; redeem as a discount | Transfers between users; cash-out; selling the token |
-| Ledger service, closed-loop token, reconciliation | Accepting crypto or stablecoins as payment |
-| Hidden wallets, no gas for users | Self-custody wallets; users seeing crypto |
-| Caps, kill switch, monitoring, runbook | KYC (unless legal requires it) |
-| Capped pilot | General launch; external audit; multiple chains |
+| Earn points on confirmed purchases. Use them as a discount | Sending tokens between users. Cash-out. Selling the token |
+| Ledger service, closed-loop token, the daily check | Paying with crypto or stablecoins |
+| Hidden wallets. No blockchain fees for users | Wallets that users control themselves. Users seeing crypto |
+| Limits, kill switch, monitoring, runbook | KYC (identity checks), unless the law says we need it |
+| Small pilot | Launch to everyone. Full outside audit. More than one blockchain |
 
-## 10. Dependencies
+## 10. What we depend on
 
-| Dependency | Needed by | Owner | If late |
+| We need | Needed by | Owner | If it is late |
 |---|---|---|---|
-| Legal view on the closed-loop design in the partner's markets | End of week 2 | Partner legal + our legal | Fall back to ledger-only |
-| Payment and refund webhooks with unique event IDs | Week 2 | Partner | Reward duplicates become harder to prevent; delay |
-| Partner engineers for the app integration | Week 3 | Partner | Pilot slips; offer SDK and mock server |
-| Wallet and key-service vendor decision | Week 1 | Tech lead | Use the simple custodial path for the pilot |
-| Chain and RPC provider | Week 1 | Tech lead | Default to Base with a managed provider |
-| Independent review of contract and service | Week 4 | Tech lead | Smaller pilot cap |
-| App Store policy check | Week 1; submission week 5 | Partner | Launch web-first |
+| A legal opinion on the closed-loop design in the partner's countries | End of week 2 | Partner legal + our legal | Launch with plain points |
+| Payment and refund messages (webhooks) with a unique event ID | Week 2 | Partner | Duplicate rewards are harder to stop, and we may be delayed |
+| Partner engineers for the app part | Week 3 | Partner | The pilot slips. We offer the SDK and the mock server |
+| A decision on the wallet and key vendor | Week 1 | Tech lead | Use the simple custodial path (we hold the wallets) for the pilot |
+| A choice of blockchain and access provider | Week 1 | Tech lead | Use Base with a managed provider |
+| An independent review of the contract and service | Week 4 | Tech lead | A smaller pilot cap |
+| An App Store rule check | Week 1. Submit in week 5 | Partner | Launch on the web first |
 
 ## 11. What I need decided
 
-1. **BD:** agree that "launch" means a **capped pilot**, and tell the partner now.
-2. **BD + partner:** confirm the closed-loop, earn-only design, or tell us now if transfers or cash-out are required, because that changes the timeline.
-3. **Partner:** confirm the refund rule (option 2), the reward rate and the monthly budget cap.
-4. **Partner legal:** start the review in week 1.
+1. **BD:** agree that "launch" means a **small pilot**, and tell the partner now.
+2. **BD and partner:** confirm the closed-loop, earn-only design. If users must be able to send tokens or cash out, tell us now, because that changes the timeline.
+3. **Partner:** confirm the refund rule (option 2), the reward rate, and the monthly budget limit.
+4. **Partner lawyers:** start the review in week 1.
+5. **Partner:** say if you want to hold the admin key (the option in section 4). If you do not answer, we hold both keys in the pilot.
 
 ## Sources and confidence
 
@@ -179,4 +205,4 @@ The customer does not pay any extra cash. The missing points are only taken from
 | [13] | Markaicode, wallet comparison (verified Sept 2026): https://markaicode.com/web3/developer-tools/wallets-and-account-abstraction/ | Coinbase embedded wallet GA and free tier; vendor ownership changes | Medium (third party) |
 | [14] | Crossmint on Privy alternatives: https://crossmint.com/learn/privy-alternatives-for-programmable-wallets | Privy acquired by Stripe (June 2025) | Medium (competitor's page) |
 
-**Not verified:** Apple's own guideline text; current vendor price pages; tax and accounting treatment; the partner's actual markets. Each is a week-1 action.
+**Not checked:** Apple's own rule text, current vendor price pages, tax and accounting rules, and the partner's real countries. Each one is a week-1 task.

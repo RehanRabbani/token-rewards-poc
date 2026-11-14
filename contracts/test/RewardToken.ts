@@ -65,4 +65,47 @@ describe("RewardToken", async () => {
       "TransfersDisabled",
     );
   });
+
+  // Two keys, two jobs: the issuer runs the day-to-day work, the admin decides who the issuer is.
+  // Neither can do the other's job. This is what lets the partner hold the admin key.
+  it("the admin can take the issuer's key away, and the old issuer can no longer reward", async () => {
+    const token = await deploy();
+    const issuerRole = await token.read.ISSUER_ROLE();
+    await token.write.reward([alice.account.address, 100n, ref("purchase-1")], { account: issuer.account });
+
+    await token.write.revokeRole([issuerRole, issuer.account.address], { account: admin.account });
+    await viem.assertions.revertWithCustomError(
+      token.write.reward([alice.account.address, 50n, ref("purchase-2")], { account: issuer.account }),
+      token,
+      "AccessControlUnauthorizedAccount",
+    );
+    assert.equal(await token.read.balanceOf([alice.account.address]), 100n); // balances are untouched
+
+    // The admin can name a new issuer, who can work straight away.
+    await token.write.grantRole([issuerRole, bob.account.address], { account: admin.account });
+    await token.write.reward([alice.account.address, 50n, ref("purchase-2")], { account: bob.account });
+    assert.equal(await token.read.balanceOf([alice.account.address]), 150n);
+  });
+
+  it("neither key has full power alone: the issuer cannot grant roles, the admin cannot create tokens", async () => {
+    const token = await deploy();
+    const issuerRole = await token.read.ISSUER_ROLE();
+    const adminRole = await token.read.DEFAULT_ADMIN_ROLE();
+
+    await viem.assertions.revertWithCustomError(
+      token.write.grantRole([issuerRole, alice.account.address], { account: issuer.account }),
+      token,
+      "AccessControlUnauthorizedAccount",
+    );
+    await viem.assertions.revertWithCustomError(
+      token.write.grantRole([adminRole, issuer.account.address], { account: issuer.account }),
+      token,
+      "AccessControlUnauthorizedAccount",
+    );
+    await viem.assertions.revertWithCustomError(
+      token.write.reward([alice.account.address, 100n, ref("x")], { account: admin.account }),
+      token,
+      "AccessControlUnauthorizedAccount",
+    );
+  });
 });
