@@ -204,5 +204,6 @@ We do **not** plan a full outside security audit inside the 6 weeks. It moves to
 | [12] | Base docs, go gasless: https://docs.base.org/use-cases/go-gasless | Sponsorship limit | Medium |
 | [13] | Markaicode, wallet comparison (verified Sept 2026): https://markaicode.com/web3/developer-tools/wallets-and-account-abstraction/ | Coinbase embedded wallet GA and free tier; vendor ownership changes | Medium (third party) |
 | [14] | Crossmint on Privy alternatives: https://crossmint.com/learn/privy-alternatives-for-programmable-wallets | Privy acquired by Stripe (June 2025) | Medium (competitor's page) |
+| [15] | Sparta Loyalty on the Odyssey closure: https://spartaloyalty.com/articles/starbucks-closing-odyessey/ | Good loyalty programs are simple | Low (opinion from a loyalty software vendor) |
 
 **Not checked:** Apple's own rule text, current vendor price pages, tax and accounting rules, and the partner's real countries. Each one is a week-1 task.

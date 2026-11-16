@@ -4,6 +4,8 @@ A partner wants its users to **pay and earn rewards with a token inside its app,
 This repo holds the proposal documents and a working proof of the riskiest part:
 **keeping the app's ledger and the on-chain token consistent when things go wrong.**
 
+Repo: https://github.com/RehanRabbani/token-rewards-poc
+
 ## Run it
 
 Requires Node 22.13+.

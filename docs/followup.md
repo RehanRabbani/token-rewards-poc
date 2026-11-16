@@ -18,7 +18,7 @@ I do not hand over a risk by naming an owner. For every item that is not mine, I
 
 | Day | What I do |
 |---|---|
-| 1 | Call with BD and the partner. Go through the five blocker questions in the proposal. Write down each answer or the assumption we use instead |
+| 1 | Call with BD and the partner. Go through the four assumptions in the proposal and the five blocker questions in `questions.md`. Write down each answer or the assumption we use instead |
 | 2 | Send a one-page scope note: what is in, what is out, and who signs. Send the legal briefing to both legal teams |
 | 3 | Technical call with the partner's engineers: payment and refund messages, user IDs, their test setup. Give them the mock server |
 | 4 | Choose the blockchain, the wallet vendor and the key storage, with a short written comparison |
