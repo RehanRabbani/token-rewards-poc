@@ -50,7 +50,7 @@ In 5 days, as technical lead working with BD:
 | D5 | **Chain-neutral EVM layer-2** design | No information about our company's own stack (assumption B4) |
 | D6 | **We define the two unexplained files** and say so in the README | The brief gives no definition; recruiter confirmed on 13 Nov: "you can define them based on your own understanding" |
 | D7 | **Front-load risk:** proof starts on Day 1, documents and buffer on Day 4 | Speed is 20%; no hard engineering left for the last two days |
-| D8 | **Proof stack:** Node 22+ and TypeScript, Hardhat 3 + viem, OpenZeppelin v5, Express, SQLite via Node's built-in `node:sqlite` (nothing to compile), zod, Node's built-in test runner with `tsx`, React + Vite + Tailwind, npm workspaces | Mostly my existing skills; runs anywhere with no setup; same design as the production stack |
+| D8 | **Proof stack:** Node 22+ and TypeScript, Hardhat 3 + viem, OpenZeppelin v5, Express, SQLite via Node's built-in `node:sqlite` (nothing to compile), zod, Node's built-in test runner with `tsx`, a plain HTML demo page (D18), npm workspaces | Mostly my existing skills; runs anywhere with no setup; same design as the production stack |
 | D9 | **Two layers of idempotency:** unique keys in our ledger *and* a used-reference check in the contract | If the service crashes after sending a transaction, a retry can never mint or burn twice |
 | D10 | **Service uses `zod` ≥ 4.6.6 directly**; the Hardhat dev-tool advisory on older `zod` is accepted, not force-fixed | The advisory (memory exhaustion on oversized inputs) matters where `zod` validates real API requests; in Hardhat it only reads local config. Force-fixing would downgrade to Hardhat 2 |
 | D11 | **Refund after the reward was spent:** never block the refund; burn what the user still holds; record the shortfall as debt netted against the next reward | Keeps customers unblocked, keeps the chain balance non-negative, bounds the partner's loss. Options compared in `feasibility.md` section 6; partner confirms via question P9 |
@@ -60,6 +60,7 @@ In 5 days, as technical lead working with BD:
 | D15 | **Reconciliation only reports, it never repairs. It is an admin route.** It lists users where the chain differs from the confirmed ledger, and entries that are stuck | The right fix depends on the cause (a bug, a stolen key, a lost write), and an automatic fix could hide a real problem. The proof has no login, so the route is behind the admin switch |
 | D16 | **A stuck entry holds back that user's later entries, never other users'.** After 5 failed tries an entry is marked stuck; a person looks, then requeues it | Order matters (a burn must not run before the mint that funds it). Waiting where everyone can see it is safer than failing quietly |
 | D17 | **Two separate keys: issuer and admin.** The issuer key gives and takes back points; the admin key only decides who holds the issuer key. In the pilot we hold both. The partner can hold the admin key as an option (question P27) | Neither side then has full power alone, and the partner can replace the issuer without trusting us. The contract already works this way (proved by two contract tests on Day 3). It controls the token on the chain, not our ledger, and the proposal must say so |
+| D18 | **The demo is one plain HTML page served by the service**, not a React + Vite + Tailwind app as first planned. `npm run demo` starts the chain, deploys a fresh token and starts the service with an empty ledger. The page's extra routes (pause the settler, create tokens behind the ledger's back) exist only against a local chain | No extra packages and no build step, so the proof still runs in 3 commands and I can explain every line. A fresh token and an empty ledger on every start mean the two always begin in agreement. A test checks the demo routes are absent unless switched on |
 
 **Production stack (proposed, not built):** EVM layer-2 (Base by default), embedded wallets (Privy / Coinbase Developer Platform / thirdweb, to be compared in `feasibility.md`), managed signing keys (AWS KMS or a custody provider), Postgres, a queue (SQS or BullMQ) for the chain worker, managed RPC with a fallback, signed webhooks plus a small partner SDK, drift alerts from reconciliation.
 
@@ -77,7 +78,7 @@ In 5 days, as technical lead working with BD:
 |---|---|
 | `contracts/` | `RewardToken.sol` ✅: ERC-20 on OpenZeppelin, whole-number tokens; only our service (issuer role) can reward and redeem; a separate admin key can replace the issuer but cannot create points (D17); user-to-user transfers blocked (closed loop); each operation's ledger reference can be used only once |
 | `service/` | Node/TypeScript API with a ledger database (SQLite) and a chain settler ✅ earn, spend, balance, settler (Day 2); refund with debt, reconciliation check, requeue of stuck entries (Day 3) |
-| `demo/` | One simple page: make a purchase, earn, redeem, see ledger and on-chain balance side by side |
+| `demo/` | ✅ One simple page (Day 4): make a purchase, earn, redeem, refund, see ledger and on-chain balance side by side. Buttons break things on purpose: the same payment twice, five checkouts at once, the chain worker paused, tokens created behind the ledger's back |
 | `tests/` | Scripted failure tests that print a readable pass/fail report |
 
 ### API
@@ -88,6 +89,7 @@ In 5 days, as technical lead working with BD:
 - `GET /balance/:userId` — ledger balance and on-chain balance
 - `GET /admin/reconcile` — compare ledger and chain; reports differences and stuck entries, repairs nothing (D15)
 - `POST /admin/settle`, `POST /admin/requeue-stuck` — run the settler once; put stuck entries back in the queue after a person has looked (D16)
+- `GET /demo/state`, `GET /demo/entries/:userId`, `POST /demo/settler`, `POST /demo/rogue-mint` — demo page only, local chain only (D18)
 
 ### Failure cases the proof must handle
 
@@ -110,8 +112,8 @@ Real money, mainnet, KYC, wallet vendors, production key management, app-store w
 | **1** | Fri 13 Nov | `intent.md`, `questions.md`, `plan.md`, AI log started ✅ | Repo set up; token compiled and deployed to the local chain ✅ (6 contract tests passing, verified on my Mac with Node 26) | ✅ Passed |
 | **2** | Sat 14 Nov | `feasibility.md` ✅ | Ledger, earn and spend end to end, chain settler ✅ (11 service tests passing against a real local chain) | ✅ One recommended option; ✅ happy path runs |
 | **3** | Sun 15 Nov (done Sat 14 Nov) | — | F3–F5 ✅ crash mid-send, refund with debt, reconciliation (F1 and F2 already passed). 40 tests in total: 8 contract and 32 service | ✅ All failure tests pass |
-| **4** | Mon 16 Nov | `proposal.md`, `followup.md` | Demo page, README (run in 3 commands) | BD could send the proposal as-is |
-| **5** | Tue 17 Nov | `Final directive.md`, final AI log | Record 5-minute video, package zip | **Submitted by midday** |
+| **4** | Mon 16 Nov (done Sat 14 Nov) | `proposal.md` ✅, `followup.md` ✅ | Demo page ✅, README (run in 3 commands: `npm install`, `npm test`, `npm run demo`) ✅. 45 tests in total: 8 contract and 37 service | ✅ Proposal passed: I rejected the first draft and approved the rewrite. ⏳ I still read `followup.md` line by line |
+| **5** | Tue 17 Nov (started Sun 15 Nov) | `Final directive.md` ✅ drafted, final AI log | ⏳ Record 5-minute video, package zip | **Submitted by midday** |
 
 **Buffer:** Day 4 afternoon. If Day 3 slips, F5 drops to "detect only" and the demo page becomes a terminal recording.
 
@@ -164,6 +166,7 @@ Real money, mainnet, KYC, wallet vendors, production key management, app-store w
 | "Keeps us out of securities territory" | Stated as an assumption needing legal sign-off | Too confident for a jurisdiction we don't know |
 | "Launch" undefined | Launch = capped pilot | A full launch needs an audit that rarely fits in 6 weeks |
 | Not covered | "Why blockchain?" and token economics (funding, expiry, abuse) in `feasibility.md` | BD will be asked these first |
+| Demo page in React + Vite + Tailwind | One plain HTML page served by the service (D18) | No extra packages or build step; runs in 3 commands |
 | Not covered | AI log from Day 0, including a second model reviewing the first plan | 10% of the grade and it must be real |
 
 ## 10. Expected outcomes

@@ -1,10 +1,12 @@
 import express, { type ErrorRequestHandler } from "express";
 import { z } from "zod";
 import type { Chain } from "./chain.ts";
+import { demoRouter, type DemoOptions } from "./demo-routes.ts";
 import { AppError } from "./errors.ts";
 import type { Ledger, WriteResult } from "./ledger.ts";
 import { reconcile } from "./reconcile.ts";
 import type { Settler } from "./settler.ts";
+import { id } from "./validation.ts";
 import { addressFor } from "./wallets.ts";
 
 export interface AppDeps {
@@ -13,13 +15,9 @@ export interface AppDeps {
   chain: Chain;
   /** Exposes the /admin routes (settle, reconcile, requeue-stuck). Off unless explicitly enabled; the proof has no authentication. */
   enableAdmin: boolean;
+  /** Serves the demo page and its demo-only routes. Local chain only; see demo-routes.ts. */
+  demo?: DemoOptions;
 }
-
-const id = z
-  .string()
-  .min(1)
-  .max(100)
-  .regex(/^[\w.:@-]+$/, "letters, digits and . _ : @ - only");
 
 const earnBody = z.strictObject({
   eventId: id, // the partner's unique payment event id: makes webhook retries harmless
@@ -135,6 +133,8 @@ export function createApp(deps: AppDeps) {
       res.json({ requeued: settler.requeueStuck() });
     });
   }
+
+  if (deps.demo) app.use(demoRouter(ledger, chain, deps.demo));
 
   app.use((_req, res) => {
     res.status(404).json({ error: "NOT_FOUND" });

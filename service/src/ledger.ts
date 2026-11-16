@@ -167,6 +167,13 @@ export class Ledger {
     return { ledgerBalance: row.ledger, settledBalance: row.settled, unsettledEntries: row.unsettled, debt };
   }
 
+  /** The user's ledger rows, newest first. */
+  entries(userId: string, limit = 50): EntryRow[] {
+    return this.db
+      .prepare("SELECT * FROM ledger_entries WHERE user_id = ? ORDER BY id DESC LIMIT ?")
+      .all(userId, limit) as unknown as EntryRow[];
+  }
+
   // --- Reads used by reconciliation -------------------------------------------------------
 
   userIds(): string[] {

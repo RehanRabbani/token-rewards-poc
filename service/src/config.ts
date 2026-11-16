@@ -13,6 +13,8 @@ export interface Config {
   maxAttempts: number;
   settleIntervalMs: number;
   enableAdmin: boolean;
+  /** Serve the demo page and its demo-only routes. Only ever on against a local chain. */
+  enableDemo: boolean;
 }
 
 /** Hardhat's public test mnemonic. Its keys are known to everyone: local use only. */
@@ -60,5 +62,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     maxAttempts: Number(env.MAX_ATTEMPTS ?? 5),
     settleIntervalMs: Number(env.SETTLE_INTERVAL_MS ?? 1000),
     enableAdmin: env.ENABLE_ADMIN === "1" || (isLocal && env.ENABLE_ADMIN !== "0"),
+    enableDemo: isLocal && env.ENABLE_DEMO !== "0",
   };
 }

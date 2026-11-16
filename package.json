@@ -13,7 +13,8 @@
     "chain": "npm run chain -w contracts",
     "deploy": "npm run deploy -w contracts",
     "deploy:local": "npm run deploy:local -w contracts",
-    "service": "npm start -w service"
+    "service": "npm start -w service",
+    "demo": "npm run build -w contracts && npm run demo -w service"
   },
   "engines": {
     "node": ">=22.13"

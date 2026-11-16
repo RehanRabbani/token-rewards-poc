@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "tsx src/server.ts",
+    "demo": "tsx src/run-demo.ts",
     "test": "node --import tsx --test --test-concurrency=1 \"test/**/*.test.ts\"",
     "typecheck": "tsc --noEmit"
   },
